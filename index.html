@@ -53,7 +53,6 @@
     </footer>
 
     <script>
-        // --- Utility function for formatting large numbers ---
         function formatNumber(num) {
             if (num === null || num === undefined) return "0";
             num = Number(num);
@@ -78,8 +77,6 @@
                 return num.toExponential(2);
             }
         }
-
-        // --- Default Game State Structure ---
         function getDefaultGameData() {
             return {
                 stardust: 0,
@@ -107,10 +104,8 @@
             };
         }
 
-        // --- Game State ---
         let gameData = getDefaultGameData();
 
-        // --- DOM Element References ---
         const stardustCountEl = document.getElementById('stardust-count');
         const spsCountEl = document.getElementById('sps-count');
         const gatherBtn = document.getElementById('gather-stardust-btn');
@@ -123,7 +118,6 @@
         const saveStatusEl = document.getElementById('save-status');
         const clickFeedbackContainer = document.getElementById('click-feedback-container');
 
-        // --- Core Functions ---
 
         function recalculateGeneratorSPS() {
             for (const genId in gameData.generators) {
@@ -216,8 +210,6 @@
                 console.log(`Failed purchase ${upgradeId}. Stardust: ${gameData.stardust}, Cost: ${upgrade.cost}`);
             }
         }
-
-        // --- UI Rendering Functions ---
 
         function renderGenerators() {
             console.log("Rendering Generators...");
@@ -331,7 +323,7 @@
                     if(totalSpsSpan) totalSpsSpan.textContent = formatNumber(gen.totalSPS);
                 }
             }
-            updateButtonStates(); // Call frequently for robustness
+            updateButtonStates();
         }
 
         function showClickFeedback(amount) {
@@ -346,7 +338,7 @@
             }, 1000);
         }
 
-        // --- Game Loop ---
+  
         function gameLoop() {
             const now = Date.now();
             const delta = (now - gameData.lastUpdate) / 1000;
@@ -356,10 +348,10 @@
                 gameData.stardust += generatedStardust;
             }
             gameData.lastUpdate = now;
-            updateUI(); // Update displays and button states every loop
+            updateUI();
         }
 
-        // --- Event Listeners ---
+   
         gatherBtn.addEventListener('click', () => {
             let clickAmount = gameData.stardustPerClick;
             if (gameData.upgrades.clickSps.purchased) {
@@ -367,10 +359,10 @@
             }
             gameData.stardust += clickAmount;
             showClickFeedback(clickAmount);
-            updateUI(); // Update displays immediately
+            updateUI();
         });
 
-        // --- Persistence ---
+      
         const SAVE_KEY = 'cosmicWeaverSave_v2';
 
         function deepMerge(target, source) {
@@ -420,14 +412,14 @@
 
                     console.log("Game loaded successfully.");
                     showSaveStatus("Game Loaded!", false);
-                    return true; // Indicate success
+                    return true;
 
                 } catch (error) {
                     console.error("Error loading game:", error);
                     showSaveStatus("Error loading! Resetting to default.", true);
                     gameData = getDefaultGameData();
                     gameData.lastUpdate = Date.now();
-                    return false; // Indicate failure
+                    return false; 
                 }
             } else {
                 console.log("No save data found.");
