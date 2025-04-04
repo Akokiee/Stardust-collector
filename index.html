@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cosmic Weaver</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Cosmic Weaver</h1>
+        <p class="lore">Gather the scattered Stardust. Re-weave the fabric of existence.</p>
+    </header>
+
+    <main>
+        <section id="resources">
+            <h2>Resources</h2>
+            <div id="stardust-display">
+                Stardust: <span id="stardust-count">0</span>
+            </div>
+            <div id="sps-display">
+                Stardust per second: <span id="sps-count">0</span>
+            </div>
+        </section>
+
+        <section id="actions">
+            <h2>Actions</h2>
+            <button id="gather-stardust-btn">Gather Stardust (+<span id="click-power-display">1</span>)</button>
+            <div id="click-feedback-container"></div>
+        </section>
+
+        <section id="generators">
+            <h2>Generators</h2>
+            </section>
+
+        <section id="upgrades">
+            <h2>Upgrades</h2>
+            </section>
+
+        <section id="persistence">
+            <h2>Game Data</h2>
+            <button id="save-btn">Save Game</button>
+            <button id="load-btn">Load Game</button>
+            <button id="reset-btn">Reset Game (Warning!)</button>
+            <div id="save-status"></div>
+        </section>
+
+    </main>
+
+    <footer>
+        <p>Cosmic Weaver v0.3 (Combined JS)</p>
+         <p>Current Date: April 4, 2025</p>
+    </footer>
+
+    <script>
+        // --- Utility function for formatting large numbers ---
+        function formatNumber(num) {
+            if (num === null || num === undefined) return "0";
+            num = Number(num);
+            if (isNaN(num)) return "NaN";
+
+            if (Math.abs(num) < 1e3) {
+                if (Math.abs(num) > 0 && Math.abs(num) < 1) return num.toFixed(3);
+                if (Math.abs(num) >= 1 && Math.abs(num) < 100) return num.toFixed(2);
+                return num.toFixed(1);
+            }
+            if (Math.abs(num) >= 1e18) return num.toExponential(2);
+
+            const suffixes = ["", "K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No", "Dc", "Ud", "Dd"];
+            const tier = Math.floor(Math.log10(Math.abs(num)) / 3);
+
+            if (tier < suffixes.length) {
+                const suffix = suffixes[tier];
+                const scale = Math.pow(10, tier * 3);
+                const scaled = num / scale;
+                return scaled.toFixed(2) + suffix;
+            } else {
+                return num.toExponential(2);
+            }
+        }
+
+        // --- Default Game State Structure ---
+        function getDefaultGameData() {
+            return {
+                stardust: 0,
+                stardustPerClick: 1,
+                generators: {
+                    wisp: { id: "wisp", name: "Cosmic Wisp", baseCost: 10, cost: 10, owned: 0, baseSPS: 0.1, currentSPS: 0.1, totalSPS: 0, flavor: "Faint glimmers that passively attract nearby Stardust." },
+                    nursery: { id: "nursery", name: "Stellar Nursery", baseCost: 150, cost: 150, owned: 0, baseSPS: 1, currentSPS: 1, totalSPS: 0, flavor: "A swirling cloud where new motes of Stardust coalesce." },
+                    singularity: { id: "singularity", name: "Singularity Tap", baseCost: 1800, cost: 1800, owned: 0, baseSPS: 8, currentSPS: 8, totalSPS: 0, flavor: "Carefully drawing Stardust from a point of infinite density." },
+                    pulsar: { id: "pulsar", name: "Pulsar Core", baseCost: 25000, cost: 25000, owned: 0, baseSPS: 50, currentSPS: 50, totalSPS: 0, flavor: "Harness the rhythmic bursts of a dying star's heart." },
+                },
+                upgrades: {
+                    click1: { id: "click1", name: "Focused Gathering", cost: 50, purchased: false, type: 'click', effectValue: 2, effectTarget: 'stardustPerClick', applyMethod: 'multiply', description: "Doubles Stardust per click.", flavor: "Concentrate your will." },
+                    click2: { id: "click2", name: "Resonant Touch", cost: 500, purchased: false, prereq: () => gameData.upgrades.click1.purchased, type: 'click', effectValue: 3, effectTarget: 'stardustPerClick', applyMethod: 'multiply', description: "Triples Stardust per click.", flavor: "Your touch resonates deeply." },
+                    clickSps: { id: "clickSps", name: "Synergistic Click", cost: 1000, purchased: false, prereq: () => gameData.generators.wisp.owned >= 5, type: 'click', effectValue: 0.01, applyMethod: 'addSPSPercentOnClick', description: "Clicks also grant 1% of your total SPS.", flavor: "Briefly harmonize with your generators." },
+                    wisp1: { id: "wisp1", name: "Wisp Attunement", cost: 100, purchased: false, prereq: () => gameData.generators.wisp.owned >= 1, type: 'generator', effectValue: 2, effectTarget: 'wisp', applyMethod: 'multiplyBaseSPS', description: "Doubles the base production of Cosmic Wisps.", flavor: "Guide the Wisps' gentle pull." },
+                    wisp2: { id: "wisp2", name: "Swarm Intelligence", cost: 800, purchased: false, prereq: () => gameData.generators.wisp.owned >= 10, type: 'generator', effectValue: 2, effectTarget: 'wisp', applyMethod: 'multiplyBaseSPS', description: "Doubles the base production of Cosmic Wisps again.", flavor: "The Wisps coordinate their efforts." },
+                    nursery1: { id: "nursery1", name: "Nebula Enrichment", cost: 1200, purchased: false, prereq: () => gameData.generators.nursery.owned >= 1, type: 'generator', effectValue: 2, effectTarget: 'nursery', applyMethod: 'multiplyBaseSPS', description: "Doubles the base production of Stellar Nurseries.", flavor: "Seed the clouds with catalysts." },
+                    singularity1: { id: "singularity1", name: "Gravity Well Tuning", cost: 15000, purchased: false, prereq: () => gameData.generators.singularity.owned >= 1, type: 'generator', effectValue: 2, effectTarget: 'singularity', applyMethod: 'multiplyBaseSPS', description: "Doubles the base production of Singularity Taps.", flavor: "Refine the extraction harmonics." },
+                    pulsar1: { id: "pulsar1", name: "Neutronium Resonance", cost: 200000, purchased: false, prereq: () => gameData.generators.pulsar.owned >= 1, type: 'generator', effectValue: 2, effectTarget: 'pulsar', applyMethod: 'multiplyBaseSPS', description: "Doubles the base production of Pulsar Cores.", flavor: "Match the frequency of the core." },
+                    synergy1: { id: "synergy1", name: "Wisp & Nursery Harmony", cost: 5000, purchased: false, prereq: () => gameData.generators.wisp.owned >= 25 && gameData.generators.nursery.owned >= 5, type: 'generator', effectValue: 1.5, effectTarget: ['wisp', 'nursery'], applyMethod: 'multiplyBaseSPS', description: "Increases Wisp and Nursery production by 50%.", flavor: "Lower-level creations working in concert." },
+                    global1: { id: "global1", name: "Cosmic Harmony", cost: 50000, purchased: false, prereq: () => gameData.generators.pulsar.owned >= 1, type: 'global', effectValue: 1.10, applyMethod: 'multiplyTotalSPS', description: "All Stardust production increased by 10%.", flavor: "A subtle resonance aligns all efforts." }
+                },
+                totalSPS: 0,
+                lastUpdate: Date.now()
+            };
+        }
+
+        // --- Game State ---
+        let gameData = getDefaultGameData();
+
+        // --- DOM Element References ---
+        const stardustCountEl = document.getElementById('stardust-count');
+        const spsCountEl = document.getElementById('sps-count');
+        const gatherBtn = document.getElementById('gather-stardust-btn');
+        const clickPowerDisplayEl = document.getElementById('click-power-display');
+        const generatorsSection = document.getElementById('generators');
+        const upgradesSection = document.getElementById('upgrades');
+        const saveBtn = document.getElementById('save-btn');
+        const loadBtn = document.getElementById('load-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const saveStatusEl = document.getElementById('save-status');
+        const clickFeedbackContainer = document.getElementById('click-feedback-container');
+
+        // --- Core Functions ---
+
+        function recalculateGeneratorSPS() {
+            for (const genId in gameData.generators) {
+                let currentSPS = gameData.generators[genId].baseSPS;
+                for (const upgradeId in gameData.upgrades) {
+                    const upgrade = gameData.upgrades[upgradeId];
+                    if (upgrade.purchased && upgrade.type === 'generator' && upgrade.applyMethod === 'multiplyBaseSPS') {
+                        const targets = Array.isArray(upgrade.effectTarget) ? upgrade.effectTarget : [upgrade.effectTarget];
+                        if (targets.includes(genId)) {
+                            currentSPS *= upgrade.effectValue;
+                        }
+                    }
+                }
+                gameData.generators[genId].currentSPS = currentSPS;
+            }
+        }
+
+        function calculateTotalSPS() {
+            let totalSPS = 0;
+            recalculateGeneratorSPS();
+
+            for (const genId in gameData.generators) {
+                const gen = gameData.generators[genId];
+                gen.totalSPS = gen.owned * gen.currentSPS;
+                totalSPS += gen.totalSPS;
+            }
+
+            for (const upgradeId in gameData.upgrades) {
+                const upgrade = gameData.upgrades[upgradeId];
+                if(upgrade.purchased && upgrade.type === 'global' && upgrade.applyMethod === 'multiplyTotalSPS') {
+                    totalSPS *= upgrade.effectValue;
+                }
+            }
+            gameData.totalSPS = totalSPS;
+        }
+
+        function recalculateClickPower() {
+            let clickPower = 1;
+            for (const upgradeId in gameData.upgrades) {
+                const upgrade = gameData.upgrades[upgradeId];
+                if(upgrade.purchased && upgrade.type === 'click' && upgrade.applyMethod === 'multiply') {
+                    clickPower *= upgrade.effectValue;
+                }
+            }
+            gameData.stardustPerClick = clickPower;
+        }
+
+        function updateGeneratorCost(genId) {
+            const gen = gameData.generators[genId];
+            gen.cost = Math.ceil(gen.baseCost * Math.pow(1.15, gen.owned));
+        }
+
+        function buyGenerator(genId) {
+            const gen = gameData.generators[genId];
+            if (Number(gameData.stardust) >= Number(gen.cost)) {
+                console.log(`Buying ${genId}. Stardust: ${gameData.stardust}, Cost: ${gen.cost}`);
+                gameData.stardust -= Number(gen.cost);
+                gen.owned++;
+                updateGeneratorCost(genId);
+                calculateTotalSPS();
+                recalculateClickPower();
+                renderGenerators();
+                renderUpgrades();
+                updateButtonStates();
+                updateUI();
+                console.log(`Bought ${genId}. New Stardust: ${gameData.stardust}, New Owned: ${gen.owned}`);
+            } else {
+                console.log(`Failed purchase ${genId}. Stardust: ${gameData.stardust}, Cost: ${gen.cost}`);
+            }
+        }
+
+        function buyUpgrade(upgradeId) {
+            const upgrade = gameData.upgrades[upgradeId];
+            if (!upgrade.purchased && Number(gameData.stardust) >= Number(upgrade.cost)) {
+                if (upgrade.prereq && !upgrade.prereq()) {
+                    console.warn(`Prerequisite not met for upgrade: ${upgradeId}`);
+                    return;
+                }
+                console.log(`Buying upgrade ${upgradeId}. Stardust: ${gameData.stardust}, Cost: ${upgrade.cost}`);
+                gameData.stardust -= Number(upgrade.cost);
+                upgrade.purchased = true;
+                calculateTotalSPS();
+                recalculateClickPower();
+                renderUpgrades();
+                renderGenerators();
+                updateButtonStates();
+                updateUI();
+                console.log(`Bought upgrade ${upgradeId}. New Stardust: ${gameData.stardust}`);
+            } else {
+                console.log(`Failed purchase ${upgradeId}. Stardust: ${gameData.stardust}, Cost: ${upgrade.cost}`);
+            }
+        }
+
+        // --- UI Rendering Functions ---
+
+        function renderGenerators() {
+            console.log("Rendering Generators...");
+            const items = generatorsSection.querySelectorAll('.generator-item');
+            items.forEach(item => item.remove());
+
+            for (const genId in gameData.generators) {
+                const gen = gameData.generators[genId];
+                const genEl = document.createElement('div');
+                genEl.className = 'generator-item';
+                genEl.id = `gen-${genId}`;
+                genEl.innerHTML = `
+                    <h3>${gen.name || 'Unnamed Generator'}</h3>
+                    <p>Owned: <span class="owned">${gen.owned !== undefined ? gen.owned : 0}</span></p>
+                    <p>Produces: <span class="produces">${formatNumber(gen.currentSPS)}</span> SPS each</p>
+                    <p>Total SPS: <span class="total-sps">${formatNumber(gen.totalSPS)}</span></p>
+                    <button class="buy-btn" data-generator="${genId}">
+                        Buy (Cost: <span class="cost">${formatNumber(gen.cost)}</span> Stardust)
+                    </button>
+                    <p class="flavor-text">${gen.flavor || ''}</p>
+                `;
+                const buyButton = genEl.querySelector('.buy-btn');
+                if (buyButton) {
+                    buyButton.addEventListener('click', () => buyGenerator(genId));
+                    console.log(`Attached listener to generator: ${genId}`);
+                } else {
+                    console.error(`Could not find buy button for generator: ${genId}`);
+                }
+                generatorsSection.appendChild(genEl);
+            }
+        }
+
+        function renderUpgrades() {
+            console.log("Rendering Upgrades...");
+            const items = upgradesSection.querySelectorAll('.upgrade-item');
+            items.forEach(item => item.remove());
+
+            for (const upgradeId in gameData.upgrades) {
+                const upgrade = gameData.upgrades[upgradeId];
+                if (!upgrade.purchased && upgrade.prereq && !upgrade.prereq()) {
+                    continue;
+                }
+
+                const upgradeEl = document.createElement('div');
+                upgradeEl.className = `upgrade-item ${upgrade.purchased ? 'purchased' : ''}`;
+                upgradeEl.id = `upg-${upgradeId}`;
+                upgradeEl.innerHTML = `
+                    <h3>${upgrade.name || 'Unnamed Upgrade'}</h3>
+                    <p>${upgrade.description || ''}</p>
+                    ${!upgrade.purchased ? `
+                    <button class="buy-btn" data-upgrade="${upgradeId}">
+                        Buy (Cost: <span class="cost">${formatNumber(upgrade.cost)}</span> Stardust)
+                    </button>` : ''}
+                    <p class="flavor-text">${upgrade.flavor || ''}</p>
+                `;
+                if (!upgrade.purchased) {
+                    const buyButton = upgradeEl.querySelector('.buy-btn');
+                    if (buyButton) {
+                        buyButton.addEventListener('click', () => buyUpgrade(upgradeId));
+                        console.log(`Attached listener to upgrade: ${upgradeId}`);
+                    } else {
+                        console.error(`Could not find buy button for unpurchased upgrade: ${upgradeId}`);
+                    }
+                }
+                upgradesSection.appendChild(upgradeEl);
+            }
+        }
+
+        function updateButtonStates() {
+            for (const genId in gameData.generators) {
+                const btn = generatorsSection.querySelector(`#gen-${genId} .buy-btn`);
+                if (btn) {
+                    const gen = gameData.generators[genId];
+                    const currentCost = Number(gen.cost);
+                    const currentStardust = Number(gameData.stardust);
+                    btn.disabled = currentStardust < currentCost || isNaN(currentCost);
+                    const costSpan = btn.querySelector('.cost');
+                    if (costSpan) costSpan.textContent = formatNumber(gen.cost);
+                }
+            }
+            for (const upgradeId in gameData.upgrades) {
+                const upgrade = gameData.upgrades[upgradeId];
+                if (!upgrade.purchased) {
+                    const btn = upgradesSection.querySelector(`#upg-${upgradeId} .buy-btn`);
+                    if (btn) {
+                        const currentCost = Number(upgrade.cost);
+                        const currentStardust = Number(gameData.stardust);
+                        btn.disabled = currentStardust < currentCost || isNaN(currentCost);
+                        const costSpan = btn.querySelector('.cost');
+                        if (costSpan) costSpan.textContent = formatNumber(upgrade.cost);
+                    }
+                }
+            }
+        }
+
+        function updateUI() {
+            stardustCountEl.textContent = formatNumber(gameData.stardust);
+            spsCountEl.textContent = formatNumber(gameData.totalSPS);
+            clickPowerDisplayEl.textContent = formatNumber(gameData.stardustPerClick);
+            document.title = `${formatNumber(gameData.stardust)} Stardust - Cosmic Weaver`;
+
+            for (const genId in gameData.generators) {
+                const genItem = document.getElementById(`gen-${genId}`);
+                if (genItem) {
+                    const gen = gameData.generators[genId];
+                    const ownedSpan = genItem.querySelector('.owned');
+                    const producesSpan = genItem.querySelector('.produces');
+                    const totalSpsSpan = genItem.querySelector('.total-sps');
+                    if(ownedSpan) ownedSpan.textContent = gen.owned !== undefined ? gen.owned : 0;
+                    if(producesSpan) producesSpan.textContent = formatNumber(gen.currentSPS);
+                    if(totalSpsSpan) totalSpsSpan.textContent = formatNumber(gen.totalSPS);
+                }
+            }
+            updateButtonStates(); // Call frequently for robustness
+        }
+
+        function showClickFeedback(amount) {
+            const feedbackEl = document.createElement('div');
+            feedbackEl.className = 'click-feedback';
+            feedbackEl.textContent = `+${formatNumber(amount)}`;
+            clickFeedbackContainer.appendChild(feedbackEl);
+            setTimeout(() => {
+                if (feedbackEl && clickFeedbackContainer.contains(feedbackEl)) {
+                    feedbackEl.remove();
+                }
+            }, 1000);
+        }
+
+        // --- Game Loop ---
+        function gameLoop() {
+            const now = Date.now();
+            const delta = (now - gameData.lastUpdate) / 1000;
+            const generatedStardust = gameData.totalSPS * delta;
+
+            if (generatedStardust > 0) {
+                gameData.stardust += generatedStardust;
+            }
+            gameData.lastUpdate = now;
+            updateUI(); // Update displays and button states every loop
+        }
+
+        // --- Event Listeners ---
+        gatherBtn.addEventListener('click', () => {
+            let clickAmount = gameData.stardustPerClick;
+            if (gameData.upgrades.clickSps.purchased) {
+                clickAmount += gameData.totalSPS * gameData.upgrades.clickSps.effectValue;
+            }
+            gameData.stardust += clickAmount;
+            showClickFeedback(clickAmount);
+            updateUI(); // Update displays immediately
+        });
+
+        // --- Persistence ---
+        const SAVE_KEY = 'cosmicWeaverSave_v2';
+
+        function deepMerge(target, source) {
+             for (const key in source) {
+                 if (source.hasOwnProperty(key)) {
+                     const targetValue = target[key];
+                     const sourceValue = source[key];
+                     if (typeof sourceValue === 'object' && sourceValue !== null && !Array.isArray(sourceValue) &&
+                         typeof targetValue === 'object' && targetValue !== null && !Array.isArray(targetValue)) {
+                         deepMerge(targetValue, sourceValue);
+                     } else {
+                          if (sourceValue !== undefined) {
+                             target[key] = sourceValue;
+                          }
+                     }
+                 }
+             }
+         }
+
+        function saveGame() {
+            try {
+                gameData.lastUpdate = Date.now();
+                localStorage.setItem(SAVE_KEY, JSON.stringify(gameData));
+                showSaveStatus("Game Saved!", false);
+                console.log("Game saved.");
+            } catch (error) {
+                console.error("Error saving game:", error);
+                showSaveStatus("Error saving!", true);
+            }
+        }
+
+        function loadGame() {
+            const savedDataString = localStorage.getItem(SAVE_KEY);
+            if (savedDataString) {
+                try {
+                    const parsedData = JSON.parse(savedDataString);
+                    let freshGameData = getDefaultGameData();
+                    deepMerge(freshGameData, parsedData);
+                    gameData = freshGameData;
+
+                    for (const genId in gameData.generators) {
+                        updateGeneratorCost(genId);
+                    }
+                    recalculateClickPower();
+                    calculateTotalSPS();
+                    gameData.lastUpdate = parsedData.lastUpdate && typeof parsedData.lastUpdate === 'number' ? parsedData.lastUpdate : Date.now();
+
+                    console.log("Game loaded successfully.");
+                    showSaveStatus("Game Loaded!", false);
+                    return true; // Indicate success
+
+                } catch (error) {
+                    console.error("Error loading game:", error);
+                    showSaveStatus("Error loading! Resetting to default.", true);
+                    gameData = getDefaultGameData();
+                    gameData.lastUpdate = Date.now();
+                    return false; // Indicate failure
+                }
+            } else {
+                console.log("No save data found.");
+                gameData.lastUpdate = Date.now(); // Start timer for fresh game
+                showSaveStatus("No save data found.", false);
+                return false; // Indicate no save found
+            }
+        }
+
+        function resetGame() {
+            if (confirm("Are you sure you want to reset your game? All progress will be lost!")) {
+                localStorage.removeItem(SAVE_KEY);
+                gameData = getDefaultGameData();
+                gameData.lastUpdate = Date.now();
+                initializeGame(true); // Re-initialize UI etc., skip load attempt
+                console.log("Game reset.");
+                showSaveStatus("Game Reset!", false);
+            }
+        }
+
+        let saveStatusTimeout;
+        function showSaveStatus(message, isError) {
+            clearTimeout(saveStatusTimeout);
+            saveStatusEl.textContent = message;
+            saveStatusEl.style.color = isError ? '#ffaaaa' : '#aaffaa';
+            saveStatusTimeout = setTimeout(() => {
+                saveStatusEl.textContent = "";
+            }, 3000);
+        }
+
+        // Add event listeners for persistence buttons
+        saveBtn.addEventListener('click', saveGame);
+        loadBtn.addEventListener('click', () => {
+            console.log("Load button clicked.");
+            if(loadGame()) {
+                console.log("Load successful, re-rendering UI...");
+                renderGenerators();
+                renderUpgrades();
+                updateButtonStates(); // Explicitly update buttons after load/render
+                updateUI(); // Final refresh
+            } else {
+                console.log("Load failed or no save found.");
+            }
+        });
+        resetBtn.addEventListener('click', resetGame);
+
+
+        // --- Initialization ---
+        function initializeGame(skipLoad = false) {
+            console.log("Initializing Cosmic Weaver...");
+
+            if (!skipLoad) {
+                loadGame();
+            }
+
+            console.log("Running initial render...");
+            renderGenerators();
+            renderUpgrades();
+            calculateTotalSPS(); // Ensure calculations are done before first UI update
+            recalculateClickPower();
+            updateButtonStates(); // Set initial button states
+            updateUI();           // Draw initial UI
+
+            if (window.gameLoopInterval) clearInterval(window.gameLoopInterval);
+            window.gameLoopInterval = setInterval(gameLoop, 100);
+
+            if (window.autoSaveInterval) clearInterval(window.autoSaveInterval);
+            window.autoSaveInterval = setInterval(saveGame, 30000);
+
+            console.log("Game running.");
+        }
+
+        // Start the game when the page loads
+        // Use DOMContentLoaded which fires earlier than window.onload if possible,
+        // ensuring the script runs once the basic HTML is parsed.
+        document.addEventListener('DOMContentLoaded', () => initializeGame());
+
+    </script>
+
+</body>
+</html>
