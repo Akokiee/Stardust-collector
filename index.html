@@ -423,9 +423,9 @@
                 }
             } else {
                 console.log("No save data found.");
-                gameData.lastUpdate = Date.now(); // Start timer for fresh game
+                gameData.lastUpdate = Date.now(); 
                 showSaveStatus("No save data found.", false);
-                return false; // Indicate no save found
+                return false; 
             }
         }
 
@@ -434,7 +434,7 @@
                 localStorage.removeItem(SAVE_KEY);
                 gameData = getDefaultGameData();
                 gameData.lastUpdate = Date.now();
-                initializeGame(true); // Re-initialize UI etc., skip load attempt
+                initializeGame(true);  
                 console.log("Game reset.");
                 showSaveStatus("Game Reset!", false);
             }
@@ -450,7 +450,7 @@
             }, 3000);
         }
 
-        // Add event listeners for persistence buttons
+      
         saveBtn.addEventListener('click', saveGame);
         loadBtn.addEventListener('click', () => {
             console.log("Load button clicked.");
@@ -458,8 +458,8 @@
                 console.log("Load successful, re-rendering UI...");
                 renderGenerators();
                 renderUpgrades();
-                updateButtonStates(); // Explicitly update buttons after load/render
-                updateUI(); // Final refresh
+                updateButtonStates(); 
+                updateUI();
             } else {
                 console.log("Load failed or no save found.");
             }
@@ -467,7 +467,7 @@
         resetBtn.addEventListener('click', resetGame);
 
 
-        // --- Initialization ---
+       
         function initializeGame(skipLoad = false) {
             console.log("Initializing Cosmic Weaver...");
 
@@ -478,10 +478,10 @@
             console.log("Running initial render...");
             renderGenerators();
             renderUpgrades();
-            calculateTotalSPS(); // Ensure calculations are done before first UI update
+            calculateTotalSPS();
             recalculateClickPower();
-            updateButtonStates(); // Set initial button states
-            updateUI();           // Draw initial UI
+            updateButtonStates(); 
+            updateUI();          
 
             if (window.gameLoopInterval) clearInterval(window.gameLoopInterval);
             window.gameLoopInterval = setInterval(gameLoop, 100);
@@ -492,9 +492,7 @@
             console.log("Game running.");
         }
 
-        // Start the game when the page loads
-        // Use DOMContentLoaded which fires earlier than window.onload if possible,
-        // ensuring the script runs once the basic HTML is parsed.
+       
         document.addEventListener('DOMContentLoaded', () => initializeGame());
 
     </script>
