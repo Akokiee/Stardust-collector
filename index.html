@@ -3,18 +3,272 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cosmic Weaver</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Stardust Collector</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0a0a1a;
+            color: #e0e0ff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        header {
+            background-color: #1a1a3a;
+            padding: 10px 20px;
+            text-align: center;
+            border-bottom: 2px solid #4a4a8a;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        h1 {
+            margin: 0;
+            color: #ffffaa;
+            text-shadow: 0 0 5px #ffffaa;
+        }
+        .lore {
+            font-style: italic;
+            color: #aaaaff;
+            margin-top: 5px;
+        }
+        main {
+            display: flex;
+            flex-wrap: wrap;
+            flex-grow: 1;
+            padding: 15px;
+            gap: 15px;
+            justify-content: center;
+            align-items: flex-start;
+        }
+        section {
+            background-color: #1c1c3f;
+            border: 1px solid #3a3a6a;
+            border-radius: 8px;
+            padding: 15px;
+            flex: 1 1 300px;
+            min-width: 280px;
+            display: flex;
+            flex-direction: column;
+            max-height: 50vh;
+            overflow-y: auto;
+        }
+        section h2 {
+            margin-top: 0;
+            color: #ccccff;
+            border-bottom: 1px solid #4a4a8a;
+            padding: 10px 5px; 
+            margin-bottom: 10px;
+            text-align: center;
+            position: sticky;
+            top: -15px;
+            background-color: #1c1c3f;
+            z-index: 5;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .section-header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+        }
+        .section-header-content > span {
+             flex-grow: 1;
+             text-align: center;
+        }
+         .section-header-content > label {
+             font-size: 0.8em;
+             font-weight: normal;
+             color: #aaaaff;
+             margin-left: 10px;
+             white-space: nowrap;
+             cursor: pointer;
+        }
+        .section-header-content input[type="checkbox"] {
+            margin-left: 5px;
+            vertical-align: middle;
+            cursor: pointer;
+        }
+        #resources div {
+            font-size: 1.1em;
+            margin-bottom: 5px;
+            background-color: #2a2a4f;
+            padding: 8px;
+            border-radius: 4px;
+        }
+        #resources span {
+            font-weight: bold;
+            color: #ffffcc;
+        }
+        button {
+            background-color: #4a4a8a;
+            color: #e0e0ff;
+            border: 1px solid #6a6a9a;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            margin-top: 10px;
+            flex-shrink: 0;
+        }
+        button:hover {
+            background-color: #5a5a9a;
+        }
+        button:active {
+            background-color: #6a6aac;
+            transform: scale(0.98);
+        }
+        button:disabled {
+            background-color: #333355;
+            color: #8888aa;
+            cursor: not-allowed;
+            border-color: #555577;
+        }
+        #actions {
+            align-items: center;
+        }
+        #gather-stardust-btn {
+            background-color: #6a6aff;
+            border-color: #8a8aff;
+            font-size: 1.2em;
+            padding: 15px 25px;
+        }
+        #gather-stardust-btn:hover {
+            background-color: #7a7aff;
+        }
+        #gather-stardust-btn:active {
+            background-color: #8a8aff;
+        }
+        .generator-item, .upgrade-item {
+            background-color: #2a2a4f;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border-left: 3px solid #6a6aff;
+            display: flex;
+            flex-direction: column;
+        }
+        .generator-item > *:not(button), .upgrade-item > *:not(button) {
+            margin-bottom: 5px;
+        }
+         .generator-item button, .upgrade-item button {
+             margin-top: auto;
+         }
+        .generator-item h3, .upgrade-item h3 {
+            margin-top: 0;
+            margin-bottom: 5px;
+            color: #ffffaa;
+        }
+        .generator-item p, .upgrade-item p {
+            margin: 0;
+            font-size: 0.9em;
+        }
+        .flavor-text {
+            font-style: italic;
+            color: #aaaaff;
+            font-size: 0.85em !important;
+            margin-top: 8px;
+            border-top: 1px dashed #4a4a8a;
+            padding-top: 8px;
+        }
+        .cost {
+            font-weight: bold;
+        }
+        .owned, .produces, .total-sps {
+            font-weight: bold;
+            color: #ccffcc;
+        }
+        .upgrade-item.purchased {
+            border-left-color: #55cc55;
+            opacity: 0.7;
+        }
+        .upgrade-item.purchased button {
+            display: none;
+        }
+        .upgrade-item.purchased::after {
+            content: "✓ Purchased";
+            display: block;
+            color: #55cc55;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 5px;
+        }
+        #upgrades.hide-purchased .upgrade-item.purchased {
+             display: none;
+        }
+        #persistence {
+            align-items: center;
+        }
+        #save-status {
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #aaffaa;
+            height: 1.2em;
+        }
+        footer {
+            text-align: center;
+            padding: 10px;
+            margin-top: auto;
+            font-size: 0.8em;
+            color: #8888aa;
+            background-color: #1a1a3a;
+            border-top: 1px solid #4a4a8a;
+            width: 100%;
+        }
+        #click-feedback-container {
+            position: relative;
+            height: 40px;
+            width: 100%;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        .click-feedback {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #ffffaa;
+            font-size: 1.1em;
+            font-weight: bold;
+            animation: floatUp 1s ease-out forwards;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+        @keyframes floatUp {
+            0% { opacity: 1; bottom: 0; }
+            100% { opacity: 0; bottom: 30px; }
+        }
+        section::-webkit-scrollbar {
+             width: 8px;
+        }
+        section::-webkit-scrollbar-track {
+             background: #1a1a3a;
+             border-radius: 4px;
+        }
+        section::-webkit-scrollbar-thumb {
+             background-color: #4a4a8a;
+             border-radius: 4px;
+             border: 2px solid #1a1a3a;
+        }
+         section::-webkit-scrollbar-thumb:hover {
+              background-color: #5a5a9a;
+         }
+    </style>
 </head>
 <body>
     <header>
-        <h1>Cosmic Weaver</h1>
+        <h1>Cosmic Weaver OS V1.1</h1>
         <p class="lore">Gather the scattered Stardust. Re-weave the fabric of existence.</p>
     </header>
 
     <main>
         <section id="resources">
-            <h2>Resources</h2>
+            <h2><span>Resources</span></h2>
             <div id="stardust-display">
                 Stardust: <span id="stardust-count">0</span>
             </div>
@@ -24,32 +278,37 @@
         </section>
 
         <section id="actions">
-            <h2>Actions</h2>
-            <button id="gather-stardust-btn">Gather Stardust (+<span id="click-power-display">1</span>)</button>
+             <h2><span>Actions</span></h2>
+            <button id="gather-stardust-btn">Gather Stardust (+<span id="effective-click-power-display">1</span>)</button>
             <div id="click-feedback-container"></div>
         </section>
 
         <section id="generators">
-            <h2>Generators</h2>
-            </section>
+             <h2><span>Generators</span></h2>
+        </section>
 
         <section id="upgrades">
-            <h2>Upgrades</h2>
-            </section>
+             <h2 class="section-header-content">
+                 <span>Upgrades</span>
+                 <label>
+                     Hide Purchased:
+                     <input type="checkbox" id="hide-purchased-toggle">
+                 </label>
+             </h2>
+        </section>
 
         <section id="persistence">
-            <h2>Game Data</h2>
+             <h2><span>Persistence</span></h2>
             <button id="save-btn">Save Game</button>
             <button id="load-btn">Load Game</button>
             <button id="reset-btn">Reset Game (Warning!)</button>
             <div id="save-status"></div>
         </section>
-
     </main>
 
     <footer>
-        <p>Cosmic Weaver v0.1</p>
-         <p>Current Date: April 4, 2025 (of upload to galaxy.click)</p>
+        <p>version: v0.2</p>
+        <p>Current Date: April 5, 2025</p>
     </footer>
 
     <script>
@@ -57,26 +316,28 @@
             if (num === null || num === undefined) return "0";
             num = Number(num);
             if (isNaN(num)) return "NaN";
+            if (!isFinite(num)) return "Infinity";
 
             if (Math.abs(num) < 1e3) {
                 if (Math.abs(num) > 0 && Math.abs(num) < 1) return num.toFixed(3);
                 if (Math.abs(num) >= 1 && Math.abs(num) < 100) return num.toFixed(2);
                 return num.toFixed(1);
             }
-            if (Math.abs(num) >= 1e18) return num.toExponential(2);
+            if (Math.abs(num) >= 1e21) return num.toExponential(2);
 
-            const suffixes = ["", "K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No", "Dc", "Ud", "Dd"];
+            const suffixes = ["", "K", "M", "B", "T", "Qa", "Qi", "Sx", "Sp", "Oc", "No", "Dc", "Ud", "Dd", "Td", "qd", "Qid", "Sxd"];
             const tier = Math.floor(Math.log10(Math.abs(num)) / 3);
 
             if (tier < suffixes.length) {
                 const suffix = suffixes[tier];
                 const scale = Math.pow(10, tier * 3);
                 const scaled = num / scale;
-                return scaled.toFixed(2) + suffix;
+                return scaled.toFixed(scaled % 1 === 0 ? 0 : 2) + suffix;
             } else {
                 return num.toExponential(2);
             }
         }
+
         function getDefaultGameData() {
             return {
                 stardust: 0,
@@ -86,21 +347,27 @@
                     nursery: { id: "nursery", name: "Stellar Nursery", baseCost: 150, cost: 150, owned: 0, baseSPS: 1, currentSPS: 1, totalSPS: 0, flavor: "A swirling cloud where new motes of Stardust coalesce." },
                     singularity: { id: "singularity", name: "Singularity Tap", baseCost: 1800, cost: 1800, owned: 0, baseSPS: 8, currentSPS: 8, totalSPS: 0, flavor: "Carefully drawing Stardust from a point of infinite density." },
                     pulsar: { id: "pulsar", name: "Pulsar Core", baseCost: 25000, cost: 25000, owned: 0, baseSPS: 50, currentSPS: 50, totalSPS: 0, flavor: "Harness the rhythmic bursts of a dying star's heart." },
+                    quasar: { id: "quasar", name: "Quasar Siphon", baseCost: 500000, cost: 500000, owned: 0, baseSPS: 250, currentSPS: 250, totalSPS: 0, flavor: "Channeling the immense energy flow from a galactic core." },
                 },
                 upgrades: {
-                    click1: { id: "click1", name: "Focused Gathering", cost: 50, purchased: false, type: 'click', effectValue: 2, effectTarget: 'stardustPerClick', applyMethod: 'multiply', description: "Doubles Stardust per click.", flavor: "Concentrate your will." },
-                    click2: { id: "click2", name: "Resonant Touch", cost: 500, purchased: false, prereq: () => gameData.upgrades.click1.purchased, type: 'click', effectValue: 3, effectTarget: 'stardustPerClick', applyMethod: 'multiply', description: "Triples Stardust per click.", flavor: "Your touch resonates deeply." },
+                    click1: { id: "click1", name: "Focused Gathering", cost: 50, purchased: false, type: 'click', effectValue: 2, applyMethod: 'multiplyBaseClick', description: "Doubles base Stardust per click.", flavor: "Concentrate your will." },
+                    click2: { id: "click2", name: "Resonant Touch", cost: 500, purchased: false, prereq: () => gameData.upgrades.click1.purchased, type: 'click', effectValue: 3, applyMethod: 'multiplyBaseClick', description: "Triples base Stardust per click.", flavor: "Your touch resonates deeply." },
                     clickSps: { id: "clickSps", name: "Synergistic Click", cost: 1000, purchased: false, prereq: () => gameData.generators.wisp.owned >= 5, type: 'click', effectValue: 0.01, applyMethod: 'addSPSPercentOnClick', description: "Clicks also grant 1% of your total SPS.", flavor: "Briefly harmonize with your generators." },
+                    clickSps2: { id: "clickSps2", name: "Advanced Synergy", cost: 75000, purchased: false, prereq: () => gameData.upgrades.clickSps.purchased && gameData.generators.pulsar.owned >= 5, type: 'click', effectValue: 0.015, applyMethod: 'setSPSPercentOnClick', description: "Improves Synergistic Click bonus to 1.5% of total SPS.", flavor: "A deeper understanding of cosmic flow." },
                     wisp1: { id: "wisp1", name: "Wisp Attunement", cost: 100, purchased: false, prereq: () => gameData.generators.wisp.owned >= 1, type: 'generator', effectValue: 2, effectTarget: 'wisp', applyMethod: 'multiplyBaseSPS', description: "Doubles the base production of Cosmic Wisps.", flavor: "Guide the Wisps' gentle pull." },
                     wisp2: { id: "wisp2", name: "Swarm Intelligence", cost: 800, purchased: false, prereq: () => gameData.generators.wisp.owned >= 10, type: 'generator', effectValue: 2, effectTarget: 'wisp', applyMethod: 'multiplyBaseSPS', description: "Doubles the base production of Cosmic Wisps again.", flavor: "The Wisps coordinate their efforts." },
                     nursery1: { id: "nursery1", name: "Nebula Enrichment", cost: 1200, purchased: false, prereq: () => gameData.generators.nursery.owned >= 1, type: 'generator', effectValue: 2, effectTarget: 'nursery', applyMethod: 'multiplyBaseSPS', description: "Doubles the base production of Stellar Nurseries.", flavor: "Seed the clouds with catalysts." },
                     singularity1: { id: "singularity1", name: "Gravity Well Tuning", cost: 15000, purchased: false, prereq: () => gameData.generators.singularity.owned >= 1, type: 'generator', effectValue: 2, effectTarget: 'singularity', applyMethod: 'multiplyBaseSPS', description: "Doubles the base production of Singularity Taps.", flavor: "Refine the extraction harmonics." },
                     pulsar1: { id: "pulsar1", name: "Neutronium Resonance", cost: 200000, purchased: false, prereq: () => gameData.generators.pulsar.owned >= 1, type: 'generator', effectValue: 2, effectTarget: 'pulsar', applyMethod: 'multiplyBaseSPS', description: "Doubles the base production of Pulsar Cores.", flavor: "Match the frequency of the core." },
+                    quasar1: { id: "quasar1", name: "Quasar Flow Control", cost: 4e6, purchased: false, prereq: () => gameData.generators.quasar.owned >= 1, type: 'generator', effectValue: 2, effectTarget: 'quasar', applyMethod: 'multiplyBaseSPS', description: "Stabilizes and doubles the output of Quasar Siphons.", flavor: "Directing the torrent." },
                     synergy1: { id: "synergy1", name: "Wisp & Nursery Harmony", cost: 5000, purchased: false, prereq: () => gameData.generators.wisp.owned >= 25 && gameData.generators.nursery.owned >= 5, type: 'generator', effectValue: 1.5, effectTarget: ['wisp', 'nursery'], applyMethod: 'multiplyBaseSPS', description: "Increases Wisp and Nursery production by 50%.", flavor: "Lower-level creations working in concert." },
                     global1: { id: "global1", name: "Cosmic Harmony", cost: 50000, purchased: false, prereq: () => gameData.generators.pulsar.owned >= 1, type: 'global', effectValue: 1.10, applyMethod: 'multiplyTotalSPS', description: "All Stardust production increased by 10%.", flavor: "A subtle resonance aligns all efforts." }
                 },
                 totalSPS: 0,
-                lastUpdate: Date.now()
+                lastUpdate: Date.now(),
+                prefs: {
+                    hidePurchasedUpgrades: false
+                }
             };
         }
 
@@ -109,7 +376,7 @@
         const stardustCountEl = document.getElementById('stardust-count');
         const spsCountEl = document.getElementById('sps-count');
         const gatherBtn = document.getElementById('gather-stardust-btn');
-        const clickPowerDisplayEl = document.getElementById('click-power-display');
+        const effectiveClickPowerDisplayEl = document.getElementById('effective-click-power-display');
         const generatorsSection = document.getElementById('generators');
         const upgradesSection = document.getElementById('upgrades');
         const saveBtn = document.getElementById('save-btn');
@@ -117,10 +384,11 @@
         const resetBtn = document.getElementById('reset-btn');
         const saveStatusEl = document.getElementById('save-status');
         const clickFeedbackContainer = document.getElementById('click-feedback-container');
-
+        const hidePurchasedToggle = document.getElementById('hide-purchased-toggle');
 
         function recalculateGeneratorSPS() {
             for (const genId in gameData.generators) {
+                if (!gameData.generators[genId]) continue;
                 let currentSPS = gameData.generators[genId].baseSPS;
                 for (const upgradeId in gameData.upgrades) {
                     const upgrade = gameData.upgrades[upgradeId];
@@ -138,13 +406,14 @@
         function calculateTotalSPS() {
             let totalSPS = 0;
             recalculateGeneratorSPS();
-
             for (const genId in gameData.generators) {
+                if (!gameData.generators[genId]) continue;
                 const gen = gameData.generators[genId];
                 gen.totalSPS = gen.owned * gen.currentSPS;
-                totalSPS += gen.totalSPS;
+                if (!isNaN(gen.totalSPS)) {
+                     totalSPS += gen.totalSPS;
+                }
             }
-
             for (const upgradeId in gameData.upgrades) {
                 const upgrade = gameData.upgrades[upgradeId];
                 if(upgrade.purchased && upgrade.type === 'global' && upgrade.applyMethod === 'multiplyTotalSPS') {
@@ -154,69 +423,79 @@
             gameData.totalSPS = totalSPS;
         }
 
-        function recalculateClickPower() {
+        function recalculateBaseClickPower() {
             let clickPower = 1;
             for (const upgradeId in gameData.upgrades) {
                 const upgrade = gameData.upgrades[upgradeId];
-                if(upgrade.purchased && upgrade.type === 'click' && upgrade.applyMethod === 'multiply') {
+                if(upgrade.purchased && upgrade.type === 'click' && upgrade.applyMethod === 'multiplyBaseClick') {
                     clickPower *= upgrade.effectValue;
                 }
             }
             gameData.stardustPerClick = clickPower;
         }
 
+        function calculateEffectiveClickAmount() {
+             let clickAmount = gameData.stardustPerClick;
+             let spsPercent = 0;
+             if (gameData.upgrades.clickSps.purchased) {
+                 spsPercent = gameData.upgrades.clickSps.effectValue;
+             }
+             if (gameData.upgrades.clickSps2 && gameData.upgrades.clickSps2.purchased) {
+                 if(gameData.upgrades.clickSps2.applyMethod === 'setSPSPercentOnClick'){
+                      spsPercent = gameData.upgrades.clickSps2.effectValue;
+                 }
+             }
+             if (spsPercent > 0) {
+                clickAmount += gameData.totalSPS * spsPercent;
+             }
+             return clickAmount;
+         }
+
         function updateGeneratorCost(genId) {
             const gen = gameData.generators[genId];
-            gen.cost = Math.ceil(gen.baseCost * Math.pow(1.15, gen.owned));
+             if (!gen) return;
+            const scaleFactor = (gen.baseCost > 10000) ? 1.16 : 1.15;
+            gen.cost = Math.ceil(gen.baseCost * Math.pow(scaleFactor, gen.owned));
         }
 
         function buyGenerator(genId) {
             const gen = gameData.generators[genId];
+            if (!gen) return;
             if (Number(gameData.stardust) >= Number(gen.cost)) {
-                console.log(`Buying ${genId}. Stardust: ${gameData.stardust}, Cost: ${gen.cost}`);
                 gameData.stardust -= Number(gen.cost);
                 gen.owned++;
                 updateGeneratorCost(genId);
                 calculateTotalSPS();
-                recalculateClickPower();
+                recalculateBaseClickPower();
                 renderGenerators();
                 renderUpgrades();
                 updateButtonStates();
                 updateUI();
-                console.log(`Bought ${genId}. New Stardust: ${gameData.stardust}, New Owned: ${gen.owned}`);
-            } else {
-                console.log(`Failed purchase ${genId}. Stardust: ${gameData.stardust}, Cost: ${gen.cost}`);
             }
         }
 
         function buyUpgrade(upgradeId) {
             const upgrade = gameData.upgrades[upgradeId];
+             if (!upgrade) return;
             if (!upgrade.purchased && Number(gameData.stardust) >= Number(upgrade.cost)) {
                 if (upgrade.prereq && !upgrade.prereq()) {
-                    console.warn(`Prerequisite not met for upgrade: ${upgradeId}`);
                     return;
                 }
-                console.log(`Buying upgrade ${upgradeId}. Stardust: ${gameData.stardust}, Cost: ${upgrade.cost}`);
                 gameData.stardust -= Number(upgrade.cost);
                 upgrade.purchased = true;
                 calculateTotalSPS();
-                recalculateClickPower();
+                recalculateBaseClickPower();
                 renderUpgrades();
                 renderGenerators();
                 updateButtonStates();
                 updateUI();
-                console.log(`Bought upgrade ${upgradeId}. New Stardust: ${gameData.stardust}`);
-            } else {
-                console.log(`Failed purchase ${upgradeId}. Stardust: ${gameData.stardust}, Cost: ${upgrade.cost}`);
             }
         }
 
         function renderGenerators() {
-            console.log("Rendering Generators...");
-            const items = generatorsSection.querySelectorAll('.generator-item');
-            items.forEach(item => item.remove());
-
+            const fragment = document.createDocumentFragment();
             for (const genId in gameData.generators) {
+                if (!gameData.generators[genId]) continue;
                 const gen = gameData.generators[genId];
                 const genEl = document.createElement('div');
                 genEl.className = 'generator-item';
@@ -234,25 +513,22 @@
                 const buyButton = genEl.querySelector('.buy-btn');
                 if (buyButton) {
                     buyButton.addEventListener('click', () => buyGenerator(genId));
-                    console.log(`Attached listener to generator: ${genId}`);
-                } else {
-                    console.error(`Could not find buy button for generator: ${genId}`);
                 }
-                generatorsSection.appendChild(genEl);
+                fragment.appendChild(genEl);
             }
+            generatorsSection.querySelectorAll('.generator-item').forEach(item => item.remove());
+            generatorsSection.appendChild(fragment);
         }
 
         function renderUpgrades() {
-            console.log("Rendering Upgrades...");
-            const items = upgradesSection.querySelectorAll('.upgrade-item');
-            items.forEach(item => item.remove());
-
+             upgradesSection.classList.toggle('hide-purchased', gameData.prefs.hidePurchasedUpgrades);
+             const fragment = document.createDocumentFragment();
             for (const upgradeId in gameData.upgrades) {
+                 if (!gameData.upgrades[upgradeId]) continue;
                 const upgrade = gameData.upgrades[upgradeId];
                 if (!upgrade.purchased && upgrade.prereq && !upgrade.prereq()) {
                     continue;
                 }
-
                 const upgradeEl = document.createElement('div');
                 upgradeEl.className = `upgrade-item ${upgrade.purchased ? 'purchased' : ''}`;
                 upgradeEl.id = `upg-${upgradeId}`;
@@ -269,17 +545,17 @@
                     const buyButton = upgradeEl.querySelector('.buy-btn');
                     if (buyButton) {
                         buyButton.addEventListener('click', () => buyUpgrade(upgradeId));
-                        console.log(`Attached listener to upgrade: ${upgradeId}`);
-                    } else {
-                        console.error(`Could not find buy button for unpurchased upgrade: ${upgradeId}`);
                     }
                 }
-                upgradesSection.appendChild(upgradeEl);
+                 fragment.appendChild(upgradeEl);
             }
+             upgradesSection.querySelectorAll('.upgrade-item').forEach(item => item.remove());
+             upgradesSection.appendChild(fragment);
         }
 
         function updateButtonStates() {
             for (const genId in gameData.generators) {
+                if (!gameData.generators[genId]) continue;
                 const btn = generatorsSection.querySelector(`#gen-${genId} .buy-btn`);
                 if (btn) {
                     const gen = gameData.generators[genId];
@@ -291,6 +567,7 @@
                 }
             }
             for (const upgradeId in gameData.upgrades) {
+                if (!gameData.upgrades[upgradeId]) continue;
                 const upgrade = gameData.upgrades[upgradeId];
                 if (!upgrade.purchased) {
                     const btn = upgradesSection.querySelector(`#upg-${upgradeId} .buy-btn`);
@@ -306,12 +583,14 @@
         }
 
         function updateUI() {
-            stardustCountEl.textContent = formatNumber(gameData.stardust);
-            spsCountEl.textContent = formatNumber(gameData.totalSPS);
-            clickPowerDisplayEl.textContent = formatNumber(gameData.stardustPerClick);
-            document.title = `${formatNumber(gameData.stardust)} Stardust - Cosmic Weaver`;
+             const effectiveClick = calculateEffectiveClickAmount();
+             stardustCountEl.textContent = formatNumber(gameData.stardust);
+             spsCountEl.textContent = formatNumber(gameData.totalSPS);
+             effectiveClickPowerDisplayEl.textContent = formatNumber(effectiveClick);
+             document.title = `${formatNumber(gameData.stardust)} Stardust - Cosmic Weaver OS`;
 
             for (const genId in gameData.generators) {
+                if (!gameData.generators[genId]) continue;
                 const genItem = document.getElementById(`gen-${genId}`);
                 if (genItem) {
                     const gen = gameData.generators[genId];
@@ -338,45 +617,50 @@
             }, 1000);
         }
 
-  
         function gameLoop() {
             const now = Date.now();
             const delta = (now - gameData.lastUpdate) / 1000;
+            calculateTotalSPS();
+            recalculateBaseClickPower();
             const generatedStardust = gameData.totalSPS * delta;
-
-            if (generatedStardust > 0) {
+            if (generatedStardust > 0 && isFinite(generatedStardust)) {
                 gameData.stardust += generatedStardust;
             }
             gameData.lastUpdate = now;
             updateUI();
         }
 
-   
         gatherBtn.addEventListener('click', () => {
-            let clickAmount = gameData.stardustPerClick;
-            if (gameData.upgrades.clickSps.purchased) {
-                clickAmount += gameData.totalSPS * gameData.upgrades.clickSps.effectValue;
-            }
-            gameData.stardust += clickAmount;
-            showClickFeedback(clickAmount);
-            updateUI();
+             const clickAmount = calculateEffectiveClickAmount();
+             if (clickAmount > 0 && isFinite(clickAmount)) {
+                gameData.stardust += clickAmount;
+                showClickFeedback(clickAmount);
+                updateUI();
+             }
         });
 
-      
-        const SAVE_KEY = 'cosmicWeaverSave_v2';
+        hidePurchasedToggle.addEventListener('change', () => {
+            gameData.prefs.hidePurchasedUpgrades = hidePurchasedToggle.checked;
+            upgradesSection.classList.toggle('hide-purchased', gameData.prefs.hidePurchasedUpgrades);
+        });
 
-        function deepMerge(target, source) {
+        const SAVE_KEY = 'cosmicWeaverSave_v3';
+
+         function deepMerge(target, source) {
              for (const key in source) {
                  if (source.hasOwnProperty(key)) {
                      const targetValue = target[key];
                      const sourceValue = source[key];
-                     if (typeof sourceValue === 'object' && sourceValue !== null && !Array.isArray(sourceValue) &&
-                         typeof targetValue === 'object' && targetValue !== null && !Array.isArray(targetValue)) {
-                         deepMerge(targetValue, sourceValue);
-                     } else {
-                          if (sourceValue !== undefined) {
-                             target[key] = sourceValue;
+                     if (target.hasOwnProperty(key)) {
+                          if (typeof sourceValue === 'object' && sourceValue !== null && !Array.isArray(sourceValue) &&
+                              typeof targetValue === 'object' && targetValue !== null && !Array.isArray(targetValue)) {
+                              deepMerge(targetValue, sourceValue);
+                          } else if (sourceValue !== undefined) {
+                              target[key] = sourceValue;
                           }
+                     } else if (key === 'prefs' && typeof sourceValue === 'object' && sourceValue !== null) {
+                          target[key] = {};
+                          deepMerge(target[key], sourceValue);
                      }
                  }
              }
@@ -387,9 +671,7 @@
                 gameData.lastUpdate = Date.now();
                 localStorage.setItem(SAVE_KEY, JSON.stringify(gameData));
                 showSaveStatus("Game Saved!", false);
-                console.log("Game saved.");
             } catch (error) {
-                console.error("Error saving game:", error);
                 showSaveStatus("Error saving!", true);
             }
         }
@@ -402,30 +684,26 @@
                     let freshGameData = getDefaultGameData();
                     deepMerge(freshGameData, parsedData);
                     gameData = freshGameData;
-
-                    for (const genId in gameData.generators) {
-                        updateGeneratorCost(genId);
-                    }
-                    recalculateClickPower();
+                    for (const genId in gameData.generators) { updateGeneratorCost(genId); }
                     calculateTotalSPS();
-                    gameData.lastUpdate = parsedData.lastUpdate && typeof parsedData.lastUpdate === 'number' ? parsedData.lastUpdate : Date.now();
-
-                    console.log("Game loaded successfully.");
+                    recalculateBaseClickPower();
+                    gameData.lastUpdate = typeof gameData.lastUpdate === 'number' ? gameData.lastUpdate : Date.now();
+                    hidePurchasedToggle.checked = gameData.prefs.hidePurchasedUpgrades;
+                    upgradesSection.classList.toggle('hide-purchased', gameData.prefs.hidePurchasedUpgrades);
                     showSaveStatus("Game Loaded!", false);
                     return true;
-
                 } catch (error) {
-                    console.error("Error loading game:", error);
                     showSaveStatus("Error loading! Resetting to default.", true);
                     gameData = getDefaultGameData();
                     gameData.lastUpdate = Date.now();
-                    return false; 
+                    hidePurchasedToggle.checked = gameData.prefs.hidePurchasedUpgrades;
+                    upgradesSection.classList.toggle('hide-purchased', gameData.prefs.hidePurchasedUpgrades);
+                    return false;
                 }
             } else {
-                console.log("No save data found.");
-                gameData.lastUpdate = Date.now(); 
+                gameData.lastUpdate = Date.now();
                 showSaveStatus("No save data found.", false);
-                return false; 
+                return false;
             }
         }
 
@@ -434,8 +712,9 @@
                 localStorage.removeItem(SAVE_KEY);
                 gameData = getDefaultGameData();
                 gameData.lastUpdate = Date.now();
-                initializeGame(true);  
-                console.log("Game reset.");
+                hidePurchasedToggle.checked = gameData.prefs.hidePurchasedUpgrades;
+                upgradesSection.classList.toggle('hide-purchased', gameData.prefs.hidePurchasedUpgrades);
+                initializeGame(true);
                 showSaveStatus("Game Reset!", false);
             }
         }
@@ -445,57 +724,45 @@
             clearTimeout(saveStatusTimeout);
             saveStatusEl.textContent = message;
             saveStatusEl.style.color = isError ? '#ffaaaa' : '#aaffaa';
-            saveStatusTimeout = setTimeout(() => {
-                saveStatusEl.textContent = "";
-            }, 3000);
+            saveStatusTimeout = setTimeout(() => { saveStatusEl.textContent = ""; }, 3000);
         }
 
-      
         saveBtn.addEventListener('click', saveGame);
         loadBtn.addEventListener('click', () => {
-            console.log("Load button clicked.");
             if(loadGame()) {
-                console.log("Load successful, re-rendering UI...");
                 renderGenerators();
                 renderUpgrades();
-                updateButtonStates(); 
+                updateButtonStates();
                 updateUI();
             } else {
-                console.log("Load failed or no save found.");
+                 renderGenerators();
+                 renderUpgrades();
+                 updateButtonStates();
+                 updateUI();
             }
         });
         resetBtn.addEventListener('click', resetGame);
 
-
-       
         function initializeGame(skipLoad = false) {
-            console.log("Initializing Cosmic Weaver...");
-
             if (!skipLoad) {
                 loadGame();
+            } else {
+                 hidePurchasedToggle.checked = gameData.prefs.hidePurchasedUpgrades;
+                 upgradesSection.classList.toggle('hide-purchased', gameData.prefs.hidePurchasedUpgrades);
             }
-
-            console.log("Running initial render...");
             renderGenerators();
             renderUpgrades();
             calculateTotalSPS();
-            recalculateClickPower();
-            updateButtonStates(); 
-            updateUI();          
-
+            recalculateBaseClickPower();
+            updateButtonStates();
+            updateUI();
             if (window.gameLoopInterval) clearInterval(window.gameLoopInterval);
             window.gameLoopInterval = setInterval(gameLoop, 100);
-
             if (window.autoSaveInterval) clearInterval(window.autoSaveInterval);
             window.autoSaveInterval = setInterval(saveGame, 30000);
-
-            console.log("Game running.");
         }
 
-       
         document.addEventListener('DOMContentLoaded', () => initializeGame());
-
     </script>
-
 </body>
 </html>
